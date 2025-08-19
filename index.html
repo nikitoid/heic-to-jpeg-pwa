@@ -6,46 +6,18 @@
     <title>Конвертер HEIC в JPEG</title>
 
     <!-- Мета-теги для PWA -->
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-    <meta name="apple-mobile-web-app-title" content="HEIC Conv" />
     <meta name="theme-color" content="#115e59" />
+    <link rel="manifest" href="manifest.json" />
+    <link
+      rel="apple-touch-icon"
+      href="https://placehold.co/192x192/115e59/ffffff?text=HEIC"
+    />
 
     <!-- Подключение Tailwind CSS для стилизации -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Подключение библиотеки для конвертации -->
-    <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
-
-    <!-- Встроенный Manifest для PWA -->
-    <link
-      rel="manifest"
-      href="data:application/manifest+json;base64,ewogICJuYW1lIjogIkhFSUMgdG8gSlBFRyBDb252ZXJ0ZXIiLAogICJzaG9ydF9uYW1lIjogIkhFSUMgQ29udiIsCiAgInN0YXJ0X3VybCI6ICIuIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjZmZmZmZmIiwKICAidGhlbWVfY29sb3IiOiAiIzExNWU1OSIsCiAgImRlc2NyaXB0aW9uIjogIkEgU3VwZXIgZmFzdCBQV0EgdG8gY29udmVydCBIRUlDIGltYWdlcyB0byBKUEVHIG9mZmxpbmUuIiwKICAiaWNvbnMiOiBbCiAgICB7CiAgICAgICJzcmMiOiAiaHR0cHM6Ly9wbGFjZWhvbGQuY28vMTkyeDE5Mi8xMTVlNTkvZmZmZmZmP3RleHQ9SEVJQyIsCiAgICAgICJzaXplcyI6ICIxOTJ4MTkyIiwKICAgICAgInR5cGUiOiAiaW1hZ2UvcG5nIgogICAgfSwKICAgIHsKICAgICAgInNyYyI6ICJodHRwHM6Ly9wbGFjZWhvbGQuY28vNTEyeDUxMi8xMTVlNTkvZmZmZmZmP3RleHQ9SEVJQyIsCiAgICAgICJzaXplcyI6ICI1MUI4NTEyIiwKICAgICAgInR5cGUiOiAiaW1hZ2UvcG5nIgogICAgfQogIF0KfQo="
-    />
-
-    <style>
-      /* Дополнительные стили для плавных переходов и улучшения UX */
-      .fade-in {
-        animation: fadeIn 0.5s ease-in-out;
-      }
-      @keyframes fadeIn {
-        from {
-          opacity: 0;
-          transform: translateY(10px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-      /* Стиль для кастомной кнопки загрузки */
-      .file-input-button {
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-      }
-    </style>
+    <!-- Подключение внешнего файла стилей -->
+    <link rel="stylesheet" href="style.css" />
   </head>
   <body class="bg-gray-100 font-sans antialiased">
     <div
@@ -111,9 +83,7 @@
       <section
         id="results"
         class="mt-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
-      >
-        <!-- Сюда будут добавляться сконвертированные изображения -->
-      </section>
+      ></section>
 
       <!-- Подвал -->
       <footer class="text-center text-gray-500 text-sm mt-8 pb-4">
@@ -121,209 +91,72 @@
       </footer>
     </div>
 
-    <script>
-      // --- РЕГИСТРАЦИЯ SERVICE WORKER для PWA ---
-      // Это позволяет приложению работать оффлайн
+    <!-- Баннер и кнопка установки (скрыты по умолчанию) -->
+    <div
+      id="install-banner"
+      class="hidden fixed bottom-0 left-0 right-0 bg-teal-800 text-white p-4 shadow-lg slide-up z-50 sm:bottom-4 sm:left-1/2 sm:-translate-x-1/2 sm:rounded-lg sm:max-w-md"
+    >
+      <div class="flex items-center">
+        <img
+          src="https://placehold.co/48x48/ffffff/115e59?text=HEIC"
+          alt="App Icon"
+          class="w-12 h-12 rounded-lg mr-4"
+        />
+        <div class="flex-grow">
+          <h3 class="font-bold">Установить приложение</h3>
+          <p class="text-sm opacity-90">
+            Добавьте на главный экран для быстрого доступа.
+          </p>
+        </div>
+        <button
+          id="install-button"
+          class="bg-white text-teal-800 font-bold py-2 px-4 rounded-md ml-4 hover:bg-gray-200 transition-colors"
+        >
+          Установить
+        </button>
+        <button
+          id="close-banner-button"
+          class="ml-2 p-2 rounded-full hover:bg-teal-700 transition-colors"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+    <button
+      id="install-fab"
+      class="hidden fixed bottom-6 right-6 bg-teal-600 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center hover:bg-teal-700 transition-transform transform hover:scale-110 z-40"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-7 w-7"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4-4m0 0L8 8m4-4v.01M12 12v4"
+        />
+      </svg>
+    </button>
 
-      const swCode = `
-            const CACHE_NAME = 'heic-converter-cache-v1';
-            const HEIC2ANY_URL = 'https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js';
-            const TAILWIND_URL = 'https://cdn.tailwindcss.com';
-            
-            // Список ресурсов для кэширования при установке
-            const urlsToCache = [
-                '/',
-                HEIC2ANY_URL,
-                TAILWIND_URL
-            ];
-
-            // Событие 'install': кэширование основных ресурсов приложения
-            self.addEventListener('install', event => {
-                event.waitUntil(
-                    caches.open(CACHE_NAME)
-                        .then(cache => {
-                            console.log('Кэш открыт');
-                            // Важно: используем 'no-cors' для CDN ресурсов, чтобы избежать ошибок
-                            const cachePromises = urlsToCache.map(urlToCache => {
-                                const request = new Request(urlToCache, { mode: 'no-cors' });
-                                return fetch(request).then(response => cache.put(urlToCache, response));
-                            });
-                            return Promise.all(cachePromises);
-                        })
-                );
-            });
-
-            // Событие 'fetch': перехват запросов и отдача из кэша, если возможно
-            self.addEventListener('fetch', event => {
-                event.respondWith(
-                    caches.match(event.request)
-                        .then(response => {
-                            // Если ресурс есть в кэше, отдаем его
-                            if (response) {
-                                return response;
-                            }
-                            // Иначе, делаем запрос к сети
-                            return fetch(event.request);
-                        })
-                );
-            });
-        `;
-
-      if ("serviceWorker" in navigator) {
-        // Создаем Service Worker из строки кода, чтобы все было в одном файле
-        const swBlob = new Blob([swCode], { type: "application/javascript" });
-        const swUrl = URL.createObjectURL(swBlob);
-
-        window.addEventListener("load", () => {
-          navigator.serviceWorker
-            .register(swUrl)
-            .then((registration) => {
-              console.log(
-                "ServiceWorker зарегистрирован: ",
-                registration.scope
-              );
-            })
-            .catch((error) => {
-              console.log("Ошибка регистрации ServiceWorker: ", error);
-            });
-        });
-      }
-
-      // --- ЛОГИКА ПРИЛОЖЕНИЯ ---
-
-      const fileInput = document.getElementById("file-input");
-      const dropZone = document.getElementById("drop-zone");
-      const statusDiv = document.getElementById("status");
-      const resultsDiv = document.getElementById("results");
-
-      // Обработчики для Drag & Drop
-      ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
-        dropZone.addEventListener(eventName, preventDefaults, false);
-      });
-
-      function preventDefaults(e) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-
-      ["dragenter", "dragover"].forEach((eventName) => {
-        dropZone.addEventListener(
-          eventName,
-          () => dropZone.classList.add("border-teal-500", "bg-teal-50"),
-          false
-        );
-      });
-
-      ["dragleave", "drop"].forEach((eventName) => {
-        dropZone.addEventListener(
-          eventName,
-          () => dropZone.classList.remove("border-teal-500", "bg-teal-50"),
-          false
-        );
-      });
-
-      dropZone.addEventListener("drop", handleDrop, false);
-      fileInput.addEventListener("change", handleFileSelect);
-
-      function handleDrop(e) {
-        const dt = e.dataTransfer;
-        const files = dt.files;
-        handleFiles(files);
-      }
-
-      function handleFileSelect(e) {
-        handleFiles(e.target.files);
-      }
-
-      async function handleFiles(files) {
-        if (files.length === 0) {
-          return;
-        }
-        // Очищаем предыдущие результаты и статус
-        resultsDiv.innerHTML = "";
-        statusDiv.innerHTML = `
-                <div class="flex items-center justify-center">
-                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-teal-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <span>Обработка ${files.length} файлов...</span>
-                </div>`;
-
-        let convertedCount = 0;
-        const conversionPromises = [];
-
-        for (const file of files) {
-          // Пропускаем не-HEIC файлы
-          if (
-            !file.type.includes("heic") &&
-            !file.type.includes("heif") &&
-            !/\.(heic|heif)$/i.test(file.name)
-          ) {
-            console.warn(`Пропущен файл: ${file.name} (не HEIC/HEIF)`);
-            continue;
-          }
-
-          const promise = convertFile(file).then((resultCard) => {
-            if (resultCard) {
-              resultsDiv.appendChild(resultCard);
-              convertedCount++;
-            }
-          });
-          conversionPromises.push(promise);
-        }
-
-        // Ждем завершения всех конвертаций
-        await Promise.all(conversionPromises);
-
-        // Обновляем статус после завершения
-        if (convertedCount > 0) {
-          statusDiv.textContent = `Готово! Успешно сконвертировано ${convertedCount} из ${files.length} файлов.`;
-        } else {
-          statusDiv.textContent =
-            "Не найдено HEIC/HEIF файлов для конвертации.";
-        }
-      }
-
-      async function convertFile(file) {
-        try {
-          const conversionResult = await heic2any({
-            blob: file,
-            toType: "image/jpeg",
-            quality: 0.9, // Качество JPEG от 0 до 1
-          });
-
-          const url = URL.createObjectURL(conversionResult);
-          const newFileName = file.name.replace(/\.(heic|heif)$/i, ".jpeg");
-
-          // Создаем карточку с результатом
-          const card = document.createElement("div");
-          card.className =
-            "bg-white rounded-lg shadow-md overflow-hidden fade-in border border-gray-200";
-
-          card.innerHTML = `
-                    <img src="${url}" alt="Сконвертированное изображение" class="w-full h-48 object-cover">
-                    <div class="p-4">
-                        <p class="text-sm font-medium text-gray-800 truncate" title="${newFileName}">${newFileName}</p>
-                        <a href="${url}" download="${newFileName}" class="mt-3 inline-block w-full text-center bg-teal-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-teal-700 transition-colors">
-                            Скачать
-                        </a>
-                    </div>
-                `;
-          return card;
-        } catch (error) {
-          console.error(`Ошибка конвертации файла ${file.name}:`, error);
-          // Создаем карточку с ошибкой
-          const errorCard = document.createElement("div");
-          errorCard.className =
-            "bg-red-50 rounded-lg p-4 fade-in border border-red-200";
-          errorCard.innerHTML = `
-                    <p class="text-sm font-bold text-red-700 truncate">${file.name}</p>
-                    <p class="text-xs text-red-600 mt-1">Не удалось сконвертировать.</p>
-                `;
-          return errorCard;
-        }
-      }
-    </script>
+    <!-- Подключение внешнего файла скриптов -->
+    <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+    <script src="script.js"></script>
   </body>
 </html>
