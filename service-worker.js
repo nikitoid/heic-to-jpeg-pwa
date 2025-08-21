@@ -1,7 +1,7 @@
 // service-worker.js
 
 // Версия кеша.
-const CACHE_VERSION = "1.0.0";
+const CACHE_VERSION = "1.0.1";
 const CACHE_NAME = `heic-to-jpeg-${CACHE_VERSION}`;
 
 // Файлы, которые необходимо кешировать для работы офлайн.

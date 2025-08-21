@@ -2,7 +2,7 @@
 
 // Оборачиваем весь код в IIFE для инкапсуляции
 (() => {
-  const APP_VERSION = "1.0.0";
+  const APP_VERSION = "1.0.1";
 
   // --- DOM Элементы ---
   const themeToggleBtn = document.getElementById("theme-toggle-btn");
