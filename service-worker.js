@@ -10,7 +10,7 @@ const urlsToCache = [
   "/index.html",
   "/style.css",
   "/script.js",
-  "/worker.js",
+  // '/worker.js', // ИЗМЕНЕНО: Воркер больше не используется
   "/heic2any.min.js",
   "/manifest.json",
   "/icons/icon-192x192.png",

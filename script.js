@@ -245,80 +245,49 @@
     progressText.textContent = `Обработано: ${current} из ${total}`;
   }
 
-  // --- НОВАЯ ЛОГИКА КОНВЕРТАЦИИ С WEB WORKERS ---
+  // --- ИЗМЕНЕНО: Конвертация возвращена в основной поток ---
   async function convertFiles() {
     convertBtn.disabled = true;
     convertBtn.textContent = "Конвертация...";
     gallery.innerHTML = "";
     galleryHeader.style.display = "none";
     progressContainer.style.display = "block";
-
-    const totalFiles = filesToConvert.length;
-    updateProgress(0, totalFiles);
+    updateProgress(0, filesToConvert.length);
     convertedFiles = [];
-    let processedCount = 0;
 
     const quality = parseInt(qualitySlider.value) / 100;
-    const numWorkers = navigator.hardwareConcurrency || 4;
-    const workers = [];
-    const taskQueue = [...filesToConvert];
 
-    for (let i = 0; i < numWorkers; i++) {
-      const worker = new Worker("worker.js");
-      workers.push(worker);
+    let processedCount = 0;
+    for (const file of filesToConvert) {
+      try {
+        const conversionResult = await heic2any({
+          blob: file,
+          toType: "image/jpeg",
+          quality: quality,
+        });
 
-      worker.onmessage = (event) => {
-        processedCount++;
-        const result = event.data;
-        if (result.success) {
-          convertedFiles.push({
-            originalFile: result.originalFile,
-            convertedBlob: result.convertedBlob,
-            originalSize: result.originalFile.size,
-            convertedSize: result.convertedSize,
-            filename: result.filename,
-          });
-        } else {
-          const errorMessage = result.filename
-            ? `Ошибка конвертации файла: ${result.filename}`
-            : `Ошибка конвертации: ${result.error || "Неизвестная ошибка"}`;
-          showToast(errorMessage);
-        }
-
-        updateProgress(processedCount, totalFiles);
-
-        if (taskQueue.length > 0) {
-          const nextFile = taskQueue.shift();
-          worker.postMessage({ file: nextFile, quality });
-        }
-
-        if (processedCount === totalFiles) {
-          renderGallery();
-          workers.forEach((w) => w.terminate());
-
-          convertBtn.textContent = "Конвертировать";
-          dropZone.querySelector("p").textContent =
-            "Перетащите .HEIC файлы сюда или нажмите для выбора";
-          setTimeout(() => {
-            progressContainer.style.display = "none";
-          }, 1000);
-        }
-      };
-
-      worker.onerror = (error) => {
-        console.error("Ошибка в Web Worker:", error);
-        showToast(`Критическая ошибка воркера: ${error.message}`);
-        processedCount++;
-        updateProgress(processedCount, totalFiles);
-      };
-    }
-
-    for (const worker of workers) {
-      if (taskQueue.length > 0) {
-        const file = taskQueue.shift();
-        worker.postMessage({ file, quality });
+        convertedFiles.push({
+          originalFile: file,
+          convertedBlob: conversionResult,
+          originalSize: file.size,
+          convertedSize: conversionResult.size,
+          filename: file.name.replace(/\.(heic|heif)$/i, ".jpg"),
+        });
+      } catch (error) {
+        console.error("Ошибка конвертации файла:", file.name, error);
+        showToast(`Ошибка конвертации файла: ${file.name}`);
       }
+      processedCount++;
+      updateProgress(processedCount, filesToConvert.length);
     }
+
+    renderGallery();
+    convertBtn.textContent = "Конвертировать";
+    dropZone.querySelector("p").textContent =
+      "Перетащите .HEIC файлы сюда или нажмите для выбора";
+    setTimeout(() => {
+      progressContainer.style.display = "none";
+    }, 1000);
   }
 
   // --- Галерея и Просмотр ---
