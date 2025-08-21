@@ -1,13 +1,24 @@
 // worker.js - Логика для фонового потока
 
-// Импортируем библиотеку для конвертации.
-// importScripts обязателен для воркеров, так как у них нет доступа к DOM и <script> тегам.
-importScripts(
-  "https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"
-);
+// ИЗМЕНЕНО: Импортируем локальную копию библиотеки.
+try {
+  importScripts("heic2any.min.js");
+} catch (e) {
+  console.error("Не удалось загрузить heic2any.min.js в воркере", e);
+  // Отправляем сообщение об ошибке, чтобы основной поток знал о проблеме
+  self.postMessage({
+    success: false,
+    error: "Failed to load converter library.",
+  });
+}
 
 // Слушаем сообщения от основного потока
 self.onmessage = async (event) => {
+  // Проверяем, загрузилась ли библиотека
+  if (typeof heic2any === "undefined") {
+    return; // Выходим, если библиотека не загружена
+  }
+
   const { file, quality } = event.data;
 
   try {

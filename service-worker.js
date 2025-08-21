@@ -4,9 +4,6 @@
 const CACHE_VERSION = "0.1.1";
 const CACHE_NAME = `heic-to-jpeg-${CACHE_VERSION}`;
 
-const CDN_URL =
-  "https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js";
-
 // Файлы, которые необходимо кешировать для работы офлайн.
 const urlsToCache = [
   "/",
@@ -14,8 +11,8 @@ const urlsToCache = [
   "/style.css",
   "/script.js",
   "/worker.js",
+  "/heic2any.min.js", // ИЗМЕНЕНО: Ссылка на локальный файл
   "/manifest.json",
-  CDN_URL,
   "/icons/icon-192x192.png",
   "/icons/icon-512x512.png",
 ];
@@ -31,6 +28,7 @@ self.addEventListener("install", (event) => {
         return cache.addAll(urlsToCache);
       })
       .then(() => {
+        // Принудительно активируем новый Service Worker сразу
         return self.skipWaiting();
       })
   );
@@ -45,6 +43,7 @@ self.addEventListener("activate", (event) => {
       .then((cacheNames) => {
         return Promise.all(
           cacheNames.map((cacheName) => {
+            // Удаляем все старые кеши, которые не совпадают с текущим
             if (cacheName !== CACHE_NAME) {
               console.log("Service Worker: Удаление старого кеша:", cacheName);
               return caches.delete(cacheName);
@@ -53,42 +52,24 @@ self.addEventListener("activate", (event) => {
         );
       })
       .then(() => {
+        // Начинаем контролировать страницу сразу
         return self.clients.claim();
       })
   );
 });
 
-// 3. Перехват сетевых запросов (Fetch) - ГИБРИДНАЯ СТРАТЕГИЯ
+// 3. Перехват сетевых запросов (Fetch) - Стратегия "Network First"
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") {
     return;
   }
 
-  // Стратегия "Cache First" для критической зависимости воркера
-  if (event.request.url === CDN_URL) {
-    event.respondWith(
-      caches.match(event.request).then((cachedResponse) => {
-        // Если есть в кеше, отдаем сразу
-        if (cachedResponse) {
-          return cachedResponse;
-        }
-        // Если нет, идем в сеть и кешируем
-        return fetch(event.request).then((networkResponse) => {
-          const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
-          return networkResponse;
-        });
-      })
-    );
-    return; // Важно, чтобы не выполнялась следующая стратегия
-  }
-
-  // Стратегия "Network First" для остальных ресурсов приложения
+  // Используем стратегию "Network First" для всех запросов.
+  // Это гарантирует, что пользователь всегда получит свежую версию, если есть интернет.
   event.respondWith(
     fetch(event.request)
       .then((networkResponse) => {
+        // Клонируем ответ, чтобы положить его в кеш
         const responseToCache = networkResponse.clone();
         caches.open(CACHE_NAME).then((cache) => {
           cache.put(event.request, responseToCache);
@@ -96,7 +77,7 @@ self.addEventListener("fetch", (event) => {
         return networkResponse;
       })
       .catch(() => {
-        // Если сети нет, отдаем из кеша
+        // Если сети нет, пытаемся найти ответ в кеше
         return caches.match(event.request);
       })
   );
