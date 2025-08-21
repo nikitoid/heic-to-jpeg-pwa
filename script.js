@@ -498,12 +498,34 @@
   // --- Service Worker и PWA логика ---
   function registerServiceWorker() {
     if ("serviceWorker" in navigator) {
+      settingsBtn.classList.add("updating"); // Показываем лоадер при запуске проверки
       navigator.serviceWorker
         .register("/service-worker.js")
         .then((reg) => {
+          settingsBtn.classList.remove("updating"); // Убираем лоадер после регистрации
           console.log("Service worker зарегистрирован.");
+
+          // Периодическая проверка обновлений (например, каждый час)
+          setInterval(() => {
+            reg.update();
+          }, 3600 * 1000);
+
+          reg.onupdatefound = () => {
+            console.log("Найдено обновление Service Worker.");
+            settingsBtn.classList.add("updating"); // Показываем лоадер при установке
+            const newWorker = reg.installing;
+            newWorker.onstatechange = () => {
+              if (
+                newWorker.state === "installed" &&
+                navigator.serviceWorker.controller
+              ) {
+                // Можно показать уведомление, но мы обновляемся автоматически
+              }
+            };
+          };
         })
         .catch((error) => {
+          settingsBtn.classList.remove("updating"); // Убираем лоадер в случае ошибки
           console.log("Ошибка регистрации Service Worker:", error);
         });
 
