@@ -11,7 +11,7 @@ const urlsToCache = [
   "/style.css",
   "/script.js",
   "/worker.js",
-  "/heic2any.min.js", // ИЗМЕНЕНО: Ссылка на локальный файл
+  "/heic2any.min.js",
   "/manifest.json",
   "/icons/icon-192x192.png",
   "/icons/icon-512x512.png",

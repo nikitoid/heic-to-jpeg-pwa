@@ -1,25 +1,31 @@
 // worker.js - Логика для фонового потока
 
-// ИЗМЕНЕНО: Импортируем локальную копию библиотеки.
+// --- ИЗМЕНЕНО: Более надежная загрузка библиотеки ---
+let libraryLoaded = false;
 try {
+  // Импортируем локальную копию библиотеки.
   importScripts("heic2any.min.js");
+  libraryLoaded = true;
 } catch (e) {
-  console.error("Не удалось загрузить heic2any.min.js в воркере", e);
-  // Отправляем сообщение об ошибке, чтобы основной поток знал о проблеме
-  self.postMessage({
-    success: false,
-    error: "Failed to load converter library.",
-  });
+  console.error(
+    "КРИТИЧЕСКАЯ ОШИБКА: Не удалось загрузить heic2any.min.js в воркере.",
+    e
+  );
 }
 
 // Слушаем сообщения от основного потока
 self.onmessage = async (event) => {
-  // Проверяем, загрузилась ли библиотека
-  if (typeof heic2any === "undefined") {
-    return; // Выходим, если библиотека не загружена
-  }
-
   const { file, quality } = event.data;
+
+  // Если библиотека не загрузилась, немедленно отправляем ошибку обратно
+  if (!libraryLoaded) {
+    self.postMessage({
+      success: false,
+      filename: file.name,
+      error: "Библиотека для конвертации не загружена.",
+    });
+    return;
+  }
 
   try {
     // Выполняем тяжелую операцию конвертации

@@ -279,21 +279,21 @@
             filename: result.filename,
           });
         } else {
-          showToast(`Ошибка конвертации файла: ${result.filename}`);
+          const errorMessage = result.filename
+            ? `Ошибка конвертации файла: ${result.filename}`
+            : `Ошибка конвертации: ${result.error || "Неизвестная ошибка"}`;
+          showToast(errorMessage);
         }
 
         updateProgress(processedCount, totalFiles);
 
-        // Если в очереди есть еще задачи, отправляем следующую этому воркеру
         if (taskQueue.length > 0) {
           const nextFile = taskQueue.shift();
           worker.postMessage({ file: nextFile, quality });
         }
 
-        // Если все файлы обработаны
         if (processedCount === totalFiles) {
           renderGallery();
-          // Завершаем работу всех воркеров
           workers.forEach((w) => w.terminate());
 
           convertBtn.textContent = "Конвертировать";
@@ -308,10 +308,11 @@
       worker.onerror = (error) => {
         console.error("Ошибка в Web Worker:", error);
         showToast(`Критическая ошибка воркера: ${error.message}`);
+        processedCount++;
+        updateProgress(processedCount, totalFiles);
       };
     }
 
-    // Запускаем начальные задачи
     for (const worker of workers) {
       if (taskQueue.length > 0) {
         const file = taskQueue.shift();
@@ -322,7 +323,6 @@
 
   // --- Галерея и Просмотр ---
   function renderGallery() {
-    // Сортируем файлы по имени, чтобы порядок был предсказуемым
     convertedFiles.sort((a, b) => a.filename.localeCompare(b.filename));
 
     gallery.innerHTML = "";
