@@ -10,6 +10,7 @@ const urlsToCache = [
   "/index.html",
   "/style.css",
   "/script.js",
+  "/worker.js", // Добавляем новый файл воркера в кеш
   "/manifest.json",
   "https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js",
   "/icons/icon-192x192.png",
@@ -24,10 +25,12 @@ self.addEventListener("install", (event) => {
       .open(CACHE_NAME)
       .then((cache) => {
         console.log("Service Worker: Кеширование основных файлов");
-        return cache.addAll(urlsToCache);
+        // Кешируем все файлы, кроме воркера, так как он может быть недоступен на старых версиях
+        return cache.addAll(
+          urlsToCache.filter((url) => !url.endsWith("worker.js"))
+        );
       })
       .then(() => {
-        // Принудительно активируем новый Service Worker сразу после установки.
         return self.skipWaiting();
       })
   );
@@ -51,7 +54,6 @@ self.addEventListener("activate", (event) => {
         );
       })
       .then(() => {
-        // Позволяем активному Service Worker'у начать перехватывать запросы сразу
         return self.clients.claim();
       })
   );
